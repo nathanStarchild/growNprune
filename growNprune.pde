@@ -3,19 +3,24 @@
 ArrayList<Leader> leaders = new ArrayList<Leader>();
 Grower oneProcessGrows;
 Pruner oneProcessPrunes;
-float startingScale = 0.05;
+float startingScale = 0.02;
 float myScale = startingScale;
+boolean tooMany;
+
+Palette myPalette;
 
 float xmag, ymag = 0;
 float newXmag, newYmag = 0; 
 
 void setup() {
-    size(1080, 1350, P3D);
-    // size(400, 650, P3D);
+    // size(1080, 1350, P3D);
+    size(1920, 1080, P3D);
     rectMode(RADIUS);
     fill(255, 0, 255);
     stroke(0, 255, 255);
     background(0);
+    myPalette = new Palette();
+    myPalette.setPalette(27);
     leaders.add(
         new Leader(PI/2, 
             PI/2,
@@ -23,16 +28,18 @@ void setup() {
             25
         )
     );
-    oneProcessGrows = new Grower(0.1);
+    oneProcessGrows = new Grower(0.16);
     oneProcessPrunes = new Pruner(0.05);
+    tooMany = false;
+
 }
 
 void draw(){
     background(0);
     pushMatrix();
-    translate(width/2, height/2, 0);
+    translate(width/2, height/2, -1000);
     scale(myScale);
-    mouseCamera(1);
+    mouseCamera(0);
     for (Leader leader : leaders){ //does this work??
     // for (int i=0; i<leaders.size(); i++){
         // Leader leader = leaders.get(i);
@@ -44,7 +51,13 @@ void draw(){
     oneProcessPrunes.pruneThatBiz();
     if (leaders.size() > 10000){
         println("so Many!");
+        tooMany = true;
         oneProcessPrunes.pruneProb *= 3;
+    }
+    if (leaders.size() < 1000 & tooMany){
+        println("so Few!");
+        tooMany = false;
+        oneProcessPrunes.pruneProb /= 9;
     }
 }
 
@@ -55,6 +68,7 @@ class Leader {
     float theta, phi, size;
     PVector location, birthPlace;
     int age;
+    color col;
 
     Leader (float thetaIn, float phiIn, PVector locationIn, float sizeIn){
         theta = thetaIn;
@@ -67,6 +81,7 @@ class Leader {
         );
         age = 0;
         size = sizeIn;
+        col = myPalette.getColor(int(abs(location.z/300))%256, 200);
     }
 
     void extend(float l) {
@@ -90,6 +105,7 @@ class Leader {
 
         pushStyle();
             strokeWeight(size);
+            stroke(this.col);
             line(
                 birthPlace.x,
                 birthPlace.y,
@@ -151,7 +167,7 @@ Leader spawn(Leader lIn) {
     // float someTheta = 3*PI/2;
     // float somePhi = ceil(random(12)) *  PI/6;
     float someTheta = random(-PI, PI);
-    float somePhi = random(-PI/8, PI/8);
+    float somePhi = random(-PI/3, PI/3);
     if (random(1) < 0.03){
         somePhi += PI;
     }
@@ -275,7 +291,7 @@ void mouseCamera(int action) {
     //  dymag = map(frameCount, 30*40, 30*90, 0, 5000);
     //  dymag = min(dymag, 5000);
     //}
-    rotateZ(2*PI * frameCount/(30*65));
+    rotateZ(2*PI * frameCount/(30*65*900));
   } else {
     translate(xmag, ymag, 0);
   }
